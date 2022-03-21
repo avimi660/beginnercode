@@ -1,4 +1,4 @@
-17:30:12 mahuika01 ~ $ # how to get into folders
+# how to get into folders
 17:31:09 mahuika01 ~ $ # log into nesi using password BlazeDogBest12
 17:31:29 mahuika01 ~ $ #use second factor authentification 
 17:31:42 mahuika01 ~ $ #use password BlazeDogBest12 again after 2nd factor 
@@ -38,5 +38,38 @@ grep $search_term /nesi/nobackup/uoo03398/michael/possum_genome_master/GCF_01110
 no_matches=`wc -l temp | awk '{ print $1 }'`
 
  
-
+# echo command means i am asking to display line of text for search_term and no_matches, the >> means I am asking it to add it to the existing results_matches.txt file
 echo $search_term $no_matches >> results_matches.txt
+
+# gene_search_term is assigned to the following code head -n 2 (first two lines of txt.) | also adding on the tail 1 line and cut -f 
+gene_search_term=`head -n 2 mito_genes.txt | tail -n 1 | cut -f 4`
+
+ 
+# searching 'gene' in the GCF file and redirecting output to temp file. > command will overwrite what is already existing in the file so be careful. 
+grep $gene_search_term /nesi/nobackup/uoo03398/alana_demo/data/GCF_011100635.1_mTriVul1.pri_genomic.gff | grep $'\t'gene$'\t' > temp
+
+# alt_search_terms is assigned to the following code 
+alt_search_terms=`head -n 2 mito_genes.txt | tail -n 1 | cut -f 5`
+# number of alternate gene names displayed 
+no_alts=`echo $alt_search_terms | grep -o ";" | wc -l`
+
+# creating the loop
+for alt_gene in `seq 1 1 $no_alts`; do echo $alt_gene; done
+
+for alt_gene in `seq 1 1 $no_alts`; do echo $alt_search_terms | cut -d ";" -f $alt_gene | sed 's/ //g'; done
+
+for alt_gene in `seq 1 1 $no_alts`; do alt_gene_name=`echo $alt_search_terms | cut -d ";" -f $alt_gene | sed 's/ //g'`; done
+
+for alt_gene in `seq 1 1 $no_alts`; do alt_gene_name=`echo $alt_search_terms | cut -d ";" -f $alt_gene | sed 's/ //g'`; echo $alt_gene_name; done
+
+for alt_gene in `seq 1 1 $no_alts`; do alt_gene_name=`echo $alt_search_terms | cut -d ";" -f $alt_gene | sed 's/ //g'`; echo $alt_gene_name; grep $alt_gene_name /nesi/nobackup/uoo03398/michael/possum_genome_master/GCF_011100635.1_mTriVul1.pri_genomic.gff | grep $'\t'gene$'\t'; done
+
+for alt_gene in `seq 1 1 $no_alts`; do alt_gene_name=`echo $alt_search_terms | cut -d ";" -f $alt_gene | sed 's/ //g'`; grep $alt_gene_name /nesi/nobackup/uoo03398/michael/possum_genome_master/GCF_011100635.1_mTriVul1.pri_genomic.gff | grep $'\t'gene$'\t' >> temp; done
+# cat = print the content of a file onto the standard output stream sort is used to arrange the order uniq is used to filter out repeated lines ie so we dont get the same line printing out for the same line in the file with multiple 
+cat temp | sort | uniq > temp_all_searches
+
+no_matches=`wc -l temp_all_searches | awk '{ print $1 }'`
+
+echo $gene_search_term $no_matches >> results_matches.txt
+ 
+cat temp_all_searches > gene_location_possum.txt
